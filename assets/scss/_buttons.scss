@@ -1,0 +1,51 @@
+//
+// Buttons
+// --------------------------------------------------
+.np-btn {
+	text-decoration: none;
+	color: #555;
+	display: inline-block;
+	background-color: #f7f7f7;
+	border: 1px solid $border;
+	padding: 3px 8px;
+	box-shadow: inset 0 1px 0 #fff, 0 1px 0 rgba(0,0,0,.08);
+	transition: all 200ms ease;
+	&:hover {
+		background-color: $blue;
+		color: $white;
+		transition: all 200ms ease;
+		box-shadow: 0 1px 0 rgba(0,0,0,.08);
+	}
+}
+
+
+.np-btn-trash {
+	background-color: $red;
+	border-color: $red;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 1px 0 rgba(0,0,0,.08);
+	color: $white;
+	&:hover {
+		background-color: darken($red, 15%);
+		border-color: darken($red, 15%);
+	}
+}
+
+// Toggle button for edit buttons (responsive)
+.np-toggle-edit {
+	display: none;
+	float: right;
+	margin-right: 10px;
+	@extend .np-btn;
+	&.active {
+		background-color: $blue;
+		color: $white;
+		box-shadow: none;
+		border-color: $blue;
+	}
+}
+@media (max-width: 767px)
+{
+	.np-toggle-edit {
+		display: inline-block;
+	}
+}
