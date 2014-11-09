@@ -4,7 +4,7 @@ Donate link: http://nestedpages.com/
 Tags: pages, admin, nested, tree view, page tree, sort, quick edit
 Requires at least: 3.8
 Tested up to: 4.0
-Stable tag: 1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,7 +79,7 @@ Hierarchical taxonomies are currently supported
 
 == Upgrade Notice ==
 
-= 1.1 =
+= 1.1.1 =
 Several new features have been added in version 1.1, including: saved toggle states, additional menu options, trash functionality, ability to add "link" menu items, and more.
 
 == More Information ==
