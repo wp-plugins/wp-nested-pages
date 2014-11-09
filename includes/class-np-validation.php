@@ -67,4 +67,31 @@ class NP_Validation {
 	}
 
 
+	/**
+	* Validate new redirect/link fields
+	*/
+	public function validateRedirect($data)
+	{
+		if ( (!isset($data['np_link_title'])) || ($data['np_link_title'] == "") ){
+			return wp_send_json(array('status' => 'error', 'message' => __('Please provide a menu title.', 'nestedpages') ));
+		}
+		if ( (!isset($data['np_link_content'])) || ($data['np_link_content'] == "") ){
+			return wp_send_json(array('status' => 'error', 'message' => __('Please provide a valid URL.', 'nestedpages') ));
+		}
+	}
+
+
+	/**
+	* Validate a string isn't empty
+	*/
+	public function checkEmpty($var, $title)
+	{
+		if ( $var == "" ){
+			$message = __('Please provide a ', 'nestedpages') . $title;
+			return wp_send_json(array('status' => 'error', 'message' => $message));
+			die();
+		}
+	}
+
+
 }
