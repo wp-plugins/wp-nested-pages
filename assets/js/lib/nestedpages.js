@@ -1,5 +1,5 @@
 /**
-* WP Pages Scripts Required by WP Pages Plugin
+* Scripts Required by Nested Pages Plugin
 * @author Kyle Phillips
 */
 jQuery(function($){
@@ -28,6 +28,7 @@ jQuery(function($){
 		$(this).find('i').toggleClass('np-icon-arrow-down').toggleClass('np-icon-arrow-right');
 		$(submenu).toggle();
 		np_set_borders();
+		np_sync_user_toggles();
 	});
 
 	/**
@@ -52,6 +53,7 @@ jQuery(function($){
 			revert_quick_edit();
 			np_set_borders();
 		}
+		np_sync_user_toggles();
 	});
 
 	/**
@@ -62,12 +64,12 @@ jQuery(function($){
 		var action = $(this).attr('href');
 		if ( action === 'show' ){
 			$(this).attr('href', 'hide');
-			$(this).text('Show Hidden Pages');
+			$(this).text(nestedpages.show_hidden);
 			$('.np-hide').removeClass('shown').hide();
 			np_set_borders();
 		} else {
 			$(this).attr('href', 'show');
-			$(this).text('Hide Hidden Pages');
+			$(this).text(nestedpages.hide_hidden);
 			$('.np-hide').addClass('shown').show();
 			np_set_borders();
 		}
@@ -244,9 +246,20 @@ jQuery(function($){
 
 	/**
 	* ------------------------------------------------------------------------
-	* Sync Menu Toggle
+	* Sync Menu
 	* ------------------------------------------------------------------------
 	**/
+
+	/**
+	* Sync menu to catch any trash updates
+	*/
+	$(document).ready(function(){
+		if ( nestedpages.syncmenu === '1' ) np_updated_sync_menu('sync'); 
+	});
+
+	/**
+	* Checkbox Toggle
+	*/
 	$('.np-sync-menu').on('change', function(){
 		var setting = ( $(this).is(':checked') ) ? 'sync' : 'nosync';
 		np_updated_sync_menu(setting);
@@ -278,7 +291,7 @@ jQuery(function($){
 
 	/**
 	* ------------------------------------------------------------------------
-	* Quick Edit
+	* Quick Edit - Pages
 	* ------------------------------------------------------------------------
 	**/
 
@@ -311,6 +324,11 @@ jQuery(function($){
 		$(this).parents('form').find('.np-taxonomies').toggle();
 	});
 
+	// Toggle the Menu Options
+	$(document).on('click', '.np-toggle-menuoptions', function(e){
+		$(this).parents('form').find('.np-menuoptions').toggle();
+	});
+
 
 	/**
 	* Set Quick Edit data
@@ -332,7 +350,10 @@ jQuery(function($){
 			minute : $(item).attr('data-minute'),
 			navstatus : $(item).attr('data-navstatus'),
 			npstatus : $(item).attr('data-np-status'),
-			navtitle : $(item).attr('data-navtitle')
+			navtitle : $(item).attr('data-navtitle'),
+			navtitleattr : $(item).attr('data-navtitleattr'),
+			navcss : $(item).attr('data-navcss'),
+			linktarget : $(item).attr('data-linktarget')
 		};
 		var parent_li = $(item).closest('.row').parent('li');
 
@@ -370,6 +391,8 @@ jQuery(function($){
 		$(form).find('.np_template').val(data.template);
 		$(form).find('.np_status').val(data.status);
 		$(form).find('.np_nav_title').val(data.navtitle);
+		$(form).find('.np_title_attribute').val(data.navtitleattr);
+		$(form).find('.np_nav_css_classes').val(data.navcss);
 		if ( data.cs === 'open' ) $(form).find('.np_cs').prop('checked', 'checked');
 
 		if ( data.npstatus === 'hide' ){
@@ -382,6 +405,12 @@ jQuery(function($){
 			$(form).find('.np_nav_status').prop('checked', 'checked');
 		} else {
 			$(form).find('.np_nav_status').removeAttr('checked');
+		}
+
+		if ( data.linktarget === "_blank" ) {
+			$(form).find('.link_target').prop('checked', 'checked');
+		} else {
+			$(form).find('.link_target').removeAttr('checked');
 		}
 		
 		// Date Fields
@@ -484,9 +513,13 @@ jQuery(function($){
 		$(button).attr('data-commentstatus', data.comment_status);
 		$(button).attr('data-status', data._status);
 		$(button).attr('data-author', data.post_author);
-		$(button).attr('data-navstatus', data.nav_status);
 		$(button).attr('data-np-status', data.np_status);
+		
+		$(button).attr('data-navstatus', data.nav_status);
 		$(button).attr('data-navtitle', data.np_nav_title);
+		$(button).attr('data-linktarget', data.link_target);
+		$(button).attr('data-navtitleattr', data.np_title_attribute);
+		$(button).attr('data-navcss', data.np_nav_css_classes);
 
 		$(button).attr('data-month', data.mm);
 		$(button).attr('data-day', data.jj);
@@ -555,7 +588,7 @@ jQuery(function($){
 	*/
 	function np_remove_qe_loading(form)
 	{
-		$(form).find('.np-save-quickedit').removeAttr('disabled');
+		$(form).find('.np-save-quickedit, .np-save-quickedit-redirect').removeAttr('disabled');
 		$(form).find('.np-qe-loading').hide();
 	}
 
@@ -573,6 +606,379 @@ jQuery(function($){
 			$(row).addClass('np-updated-show');
 		}, 1500);
 	}
+
+
+
+
+
+	/**
+	* ------------------------------------------------------------------------
+	* Quick Edit - Redirect
+	* ------------------------------------------------------------------------
+	**/
+	$(document).on('click', '.np-quick-edit-redirect', function(e){
+		e.preventDefault();
+		revert_quick_edit();
+		set_redirect_quick_edit_data($(this));
+	});
+
+	// Submit the form
+	$(document).on('click', '.np-save-quickedit-redirect', function(e){
+		e.preventDefault();
+		$('.row').removeClass('np-updated').removeClass('np-updated-show');
+		var form = $(this).parents('form');
+		$(this).attr('disabled', 'disabled');
+		$(form).find('.np-qe-loading').show();
+		submit_np_quickedit_redirect(form);
+	});
+
+	/**
+	* Set the Redirect Quick edit data & create form
+	*/
+	function set_redirect_quick_edit_data(item)
+	{
+		var data = {
+			id : $(item).attr('data-id'),
+			url : $(item).attr('data-url'),
+			title : $(item).attr('data-title'),
+			status : $(item).attr('data-status'),
+			navstatus : $(item).attr('data-navstatus'),
+			npstatus : $(item).attr('data-np-status'),
+			linktarget : $(item).attr('data-linktarget'),
+			parentid : $(item).attr('data-parentid'),
+			navtitleattr : $(item).attr('data-navtitleattr'),
+			navcss : $(item).attr('data-navcss')
+		};
+		var parent_li = $(item).closest('.row').parent('li');
+		
+		// Append the form to the list item
+		if ( $(parent_li).children('ol').length > 0 ){
+			var child_ol = $(parent_li).children('ol');
+			var newform = $('.quick-edit-form-redirect').clone().insertBefore(child_ol);
+		} else {
+			var newform = $('.quick-edit-form-redirect').clone().appendTo(parent_li);
+		}
+
+		var row = $(newform).siblings('.row').hide();
+		$(newform).show();
+
+		populate_redirect_quick_edit(newform, data);
+	}
+
+	/**
+	* Populate the Quick Edit Form
+	*/
+	function populate_redirect_quick_edit(form, data)
+	{
+		$(form).find('.np_id').val(data.id);
+		$(form).find('.np_title').val(data.title);
+		$(form).find('.np_author select').val(data.author);
+		$(form).find('.np_status').val(data.status);
+		$(form).find('.np_content').val(data.url);
+		$(form).find('.np_parent_id').val(data.parentid);
+		$(form).find('.np_title_attribute').val(data.navtitleattr);
+		$(form).find('.np_nav_css_classes').val(data.navcss);
+
+		if ( data.npstatus === 'hide' ){
+			$(form).find('.np_status').prop('checked', 'checked');
+		} else {
+			$(form).find('.np_status').removeAttr('checked');
+		}
+		
+		if ( data.navstatus === 'hide' ) {
+			$(form).find('.np_nav_status').prop('checked', 'checked');
+		} else {
+			$(form).find('.np_nav_status').removeAttr('checked');
+		}
+
+		if ( data.linktarget === "_blank" ) {
+			$(form).find('.link_target').prop('checked', 'checked');
+		} else {
+			$(form).find('.link_target').removeAttr('checked');
+		}
+
+		$(form).show();
+	}
+
+
+	/**
+	* Submit the Quick Edit Form for Redirects
+	*/
+	function submit_np_quickedit_redirect(form)
+	{
+		$('.np-quickedit-error').hide();
+		var syncmenu = ( $('.np-sync-menu').is(':checked') ) ? 'sync' : 'nosync';
+		$.ajax({
+			url: ajaxurl,
+			type: 'post',
+			datatype: 'json',
+			data: $(form).serialize() + '&action=npquickeditredirect&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			success: function(data){
+				console.log(data);
+				if (data.status === 'error'){
+					np_remove_qe_loading(form);
+					$(form).find('.np-quickedit-error').text(data.message).show();
+				} else {
+					np_remove_qe_loading(form);
+					np_update_qe_redirect_data(form, data.post_data);
+					np_qe_update_animate(form);
+				}
+			},
+			error: function(){
+				np_remove_qe_loading(form);
+				$(form).find('.np-quickedit-error').text('The form could not be saved at this time.').show();
+			}
+		});
+	}
+
+
+	/**
+	* Update Row Data after Quick Edit (Redirect)
+	*/
+	function np_update_qe_redirect_data(form, data)
+	{
+		var row = $(form).parent('.quick-edit').siblings('.row');
+		$(row).find('.title').html(data.post_title + ' <i class="np-icon-link"></i>');
+		
+		var status = $(row).find('.status');
+		if ( (data._status !== 'publish') && (data._status !== 'future') ){
+			$(status).text('(' + data._status + ')');
+		} else {
+			$(status).text('');
+		}
+
+		// Hide / Show in Nav
+		var nav_status = $(row).find('.nav-status');
+		if ( (data.nav_status == 'hide') ){
+			$(nav_status).text('(Hidden)');
+		} else {
+			$(nav_status).text('');
+		}
+
+		// Hide / Show in Nested Pages
+		var li = $(row).parent('li');
+		if ( (data.np_status == 'hide') ){
+			$(li).addClass('np-hide');
+			$(row).find('.status').after('<i class="np-icon-eye-blocked"></i>');
+		} else {
+			$(li).removeClass('np-hide');
+			$(row).find('.np-icon-eye-blocked').remove();
+		}
+
+		var button = $(row).find('.np-quick-edit-redirect');
+
+		$(button).attr('data-id', data.post_id);
+		$(button).attr('data-title', data.post_title);
+		$(button).attr('data-url', data.post_content);
+		$(button).attr('data-status', data._status);
+		$(button).attr('data-navstatus', data.nav_status);
+		$(button).attr('data-np-status', data.np_status);
+		$(button).attr('data-linktarget', data.link_target);
+		$(button).attr('data-navtitleattr', data.np_title_attribute);
+		$(button).attr('data-navcss', data.np_nav_css_classes);
+	}
+
+
+
+
+
+	/**
+	* ------------------------------------------------------------------------
+	* Add new Redirect link (modal)
+	* ------------------------------------------------------------------------
+	**/
+	$(document).on('click', '.open-redirect-modal', function(e){
+		e.preventDefault();
+		var parent_id = $(this).attr('data-parentid');
+		$('.np-modal-form').find('input').val('');
+		$('.np-modal-form').find('.parent_id').val(parent_id);
+		if (parent_id === '0'){
+			$('#np-add-link-title').text(nestedpages.add_link);
+		} else {
+			$('#np-add-link-title').text(nestedpages.add_child_link);
+		}
+		$('#np-link-modal').modal('show');
+	});
+
+	$(document).on('click', '.np-save-link', function(e){
+		e.preventDefault();
+		$('.np-new-link-error').hide();
+		$('.np-link-loading').show();
+		$(this).attr('disabled', 'disabled');
+		np_save_new_link();
+	});
+
+	/**
+	* Remove loading state from link form
+	*/
+	function np_remove_link_loading()
+	{
+		$('.np-link-loading').hide();
+		$('.np-save-link').removeAttr('disabled');
+	}
+
+	/**
+	* Set new link data
+	*/
+	function np_save_new_link()
+	{
+		$('.np-new-link-error').hide();
+		var data = $('.np-new-link-form').serialize();
+		var syncmenu = ( $('.np-sync-menu').is(':checked') ) ? 'sync' : 'nosync';
+
+		$.ajax({
+			url: ajaxurl,
+			type: 'post',
+			datatype: 'json',
+			data: data + '&action=npnewredirect&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			success: function(data){
+				console.log(data);
+				if (data.status === 'error'){
+					np_remove_link_loading();
+					$('.np-new-link-error').text(data.message).show();
+				} else {
+					np_remove_link_loading();
+					np_create_redirect_row(data.post_data);
+				}
+			}
+		});
+	}
+
+	/**
+	* Create the new row and append where needed
+	*/
+	function np_create_redirect_row(data)
+	{
+		var html = '<li id="menuItem_' + data.id + '" class="page-row';
+		if ( data._status === 'publish' ){
+			html += ' published';
+		}
+		html += '">'
+
+		html += '<div class="row"><div class="child-toggle"></div><div class="row-inner"><i class="np-icon-sub-menu"></i><i class="handle np-icon-menu"></i><a href="' + data.np_link_content + '" class="page-link page-title" target="_blank"><span class="title">' + data.np_link_title + ' <i class="np-icon-link"></i></span>';
+
+		// Post Status
+		if ( data._status !== 'publish' ){
+			html += '<span class="status">' + data._status + '</span>';
+		} else {
+			html += '<span class="status"></span>';
+		}
+
+		// Nested Pages Status
+		if ( data.np_status === "hide" ){
+			html += '<i class="np-icon-eye-blocked"></i>';
+		}
+
+		// Nav Menu Status
+		if ( data.nav_status === "hide" ){
+			html += '<span class="nav-status">(Hidden)</span>';
+		} else {
+			html += '<span class="nav-status"></span>';
+		}
+
+		// Quick Edit Button
+		html += '</a><a href="#" class="np-toggle-edit"><i class="np-icon-pencil"></i></a><div class="action-buttons"><a href="#" class="np-btn np-quick-edit-redirect" ';
+		html +=	'data-id="' + data.id + '"'; 
+		html += 'data-parentid="' + data.parent_id + '"';
+		html += 'data-title="' + data.np_link_title + '" ';
+		html += 'data-url="' + data.np_link_content + '" ';
+		html += 'data-status="' + data._status + '" ';
+		html += 'data-np-status="' + data.np_status + '" ';
+		html += 'data-navstatus="' + data.nav_status + '" ';
+		html += 'data-linktarget="' + data.link_target + '">'
+		html += 'Quick Edit</a>';
+		html += '</div></div></div></li>';
+
+		if ( data.parent_id === "0" ){
+			$('.nplist:first li:first').after(html);
+		} else {
+			np_append_child_link(html, data);
+		}
+
+		$('#np-link-modal').modal('hide');
+
+		var row = $('#menuItem_' + data.id).find('.row');
+		np_qe_update_redirect_animate(row);
+	}
+
+
+	/**
+	* Append a child link
+	*/
+	function np_append_child_link(html, data)
+	{
+		var parent_row = $('#menuItem_' + data.parent_id);
+		if ( $(parent_row).children('ol').length === 0 ){
+			html = '<ol class="sortable nplist" style="display:block;">' + html + '</ol>';
+			$(parent_row).append(html);
+		} else {
+			$(parent_row).find('ol:first').prepend(html);
+		}
+		add_remove_submenu_toggles();
+		np_sync_user_toggles();
+	}
+
+
+	/**
+	* Show quick edit update animation after adding redirect
+	*/
+	function np_qe_update_redirect_animate(row)
+	{	
+		$(row).addClass('np-updated');
+		np_set_borders();
+		setTimeout(function(){
+			$(row).addClass('np-updated-show');
+		}, 1500);
+	}
+
+
+
+
+
+	/**
+	* ------------------------------------------------------------------------
+	* Sync User's Toggled Pages
+	* ------------------------------------------------------------------------
+	**/
+
+	/** 
+	* Get an array of visible pages' ids
+	* @return array
+	*/
+	function np_get_visible_rows()
+	{
+		var visible_ids = [];
+		var visible = $('.page-row:visible');
+		$.each(visible, function(i, v){
+			var id = $(this).attr('id');
+			visible_ids.push(id.replace("menuItem_", ""));
+		});
+		return visible_ids;
+	}
+
+	/**
+	* Sync the user's stored toggle status
+	*/
+	function np_sync_user_toggles()
+	{
+		var ids = np_get_visible_rows();
+		$.ajax({
+			url: ajaxurl,
+			type: 'post',
+			datatype: 'json',
+			data: {
+				action : 'npnesttoggle',
+				nonce : nestedpages.np_nonce,
+				ids : ids
+			},
+			success: function(data){
+				if ( data.status !== 'success' ){
+					console.log('There was an error saving toggled pages.');
+				}
+			}
+		});
+	}
+
 
 
 }); //$

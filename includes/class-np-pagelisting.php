@@ -1,5 +1,6 @@
 <?php
-
+require_once('class-np-confirmation.php');
+require_once('class-np-helpers.php');
 /**
 * Primary Listing Class
 * Initiates Page Listing screen (overwriting default), and displays primary plugin view.
@@ -25,6 +26,13 @@ class NP_PageListing {
 	* @var array
 	*/
 	private $f_taxonomies;
+
+
+	/**
+	* Post Data
+	* @var array
+	*/
+	private $post_data;
 
 
 	public function __construct()
@@ -86,6 +94,16 @@ class NP_PageListing {
 		return $link;
 	}
 
+	/**
+	* User's Toggled Pages
+	*/
+	private function visiblePages()
+	{
+		$visible = unserialize(get_user_meta(get_current_user_id(), 'np_visible_pages', true));
+		if ( !$visible ) $visible = array();
+		return $visible;
+	}
+
 
 	/**
 	* The Main View
@@ -93,7 +111,16 @@ class NP_PageListing {
 	*/
 	public function pageListing()
 	{
-		include( dirname( dirname(__FILE__) ) . '/views/pages.php');
+		include( NP_Helpers::view('pages') );
+	}
+
+	/**
+	* Get Trash Count (pages)
+	*/
+	private function trashCount()
+	{
+		$trashed = new WP_Query(array('post_type'=>'page','post_status'=>'trash','posts_per_page'=>-1));
+		return $trashed->found_posts;
 	}
 
 
@@ -138,6 +165,103 @@ class NP_PageListing {
 		return $out;
 	}
 
+	/**
+	* Display Confirmation Message
+	* @todo add styling to clear floats
+	*/
+	private function confirmation()
+	{
+		$confirmation = new NP_Confirmation;
+		return $confirmation->getMessage();
+	}
+
+
+	/**
+	* Opening list tag <ol>
+	* @param array $pages - array of page objects from current query
+	* @param int $count - current count in loop
+	*/
+	private function listOpening($pages, $count)
+	{
+		// Get array of child pages
+		$children = array();
+		$all_children = $pages->posts;
+		foreach($all_children as $child){
+			array_push($children, $child->ID);
+		}
+		// Compare child pages with user's toggled pages
+		$compared = array_intersect($this->visiblePages(), $children);
+
+		if ( $count == 1 ) {
+			echo ( current_user_can('edit_theme_options') ) 
+				? '<ol class="sortable nplist">' 
+				: '<ol class="sortable no-sort nplist">';
+		} else {
+			echo '<ol class="nplist"';
+			if ( count($compared) > 0 ) echo ' style="display:block;"';
+			echo '>';	
+		} 
+	}
+
+
+	/**
+	* Set Post Data
+	*/
+	private function setPostData($post)
+	{
+		$this->post_data['template'] = get_post_meta($post->ID, '_wp_page_template', true);
+
+		// Show Hide in generated nav menu
+		$ns = get_post_meta( get_the_id(), 'np_nav_status', true);
+		$this->post_data['nav_status'] = ( $ns == 'hide' ) ? 'hide' : 'show';
+
+		// Hidden in Nested Pages?
+		$np_status = get_post_meta( get_the_id(), 'nested_pages_status', true );
+		$this->post_data['np_status'] = ( $np_status == 'hide' ) ? 'hide' : 'show';
+
+		// Menu Title
+		$this->post_data['nav_title'] = get_post_meta(get_the_id(), 'np_nav_title', true);
+
+		// Redirect Link Target
+		$this->post_data['link_target'] = get_post_meta(get_the_id(), 'np_link_target', true);
+
+		// Parent ID
+		$this->post_data['parent_id'] = $post->post_parent;
+
+		// Nav Title Attribute
+		$this->post_data['nav_title_attr'] = get_post_meta(get_the_id(), 'np_title_attribute', true);
+
+		// Nav CSS Classes
+		$this->post_data['nav_css'] = get_post_meta(get_the_id(), 'np_nav_css_classes', true);
+
+		// Yoast Score
+		if ( function_exists('wpseo_translate_score') ) {
+			$yoast_score = get_post_meta(get_the_id(), '_yoast_wpseo_linkdex', true);
+			$this->post_data['score'] = wpseo_translate_score($yoast_score);
+		};
+
+		// Date Vars
+		$this->post_data['d'] = get_the_time('d');
+		$this->post_data['month'] = get_the_time('m');
+		$this->post_data['y'] = get_the_time('Y');
+		$this->post_data['h'] = get_the_time('H');
+		$this->post_data['m'] = get_the_time('i');
+	}
+
+
+	/**
+	* Get count of published posts
+	* @param object $pages
+	*/
+	private function publishCount($pages)
+	{
+		$publish_count = 1;
+		foreach ( $pages->posts as $p ){
+			if ( $p->post_status !== 'trash' ) $publish_count++;
+		}
+		return $publish_count;
+	}
+
 
 	/**
 	* Loop through all the pages and create the nested / sortable list
@@ -145,74 +269,63 @@ class NP_PageListing {
 	*/
 	private function loopPages($parent_id = 0, $count = 0)
 	{
+		$this->setTaxonomies();
 		$pages = new WP_Query(array(
-			'post_type' => 'page',
+			'post_type' => array('page','np-redirect'),
 			'posts_per_page' => -1,
 			'orderby' => 'menu_order',
+			'post_status' => array('publish','trash'),
 			'post_parent' => $parent_id,
 			'order' => 'ASC'
 		));
 		if ( $pages->have_posts() ) :
 			$count++;
 
-			if ( $count == 1 ) {
-				
-				$this->setTaxonomies();
-
-				echo ( current_user_can('edit_theme_options') ) 
-					? '<ol class="sortable nplist">' 
-					: '<ol class="sortable no-sort nplist">';
-			} else {
-				echo '<ol class="nplist">';	
-			} 
-
+			if ( $this->publishCount($pages) > 1 ){
+				$this->listOpening($pages, $count);			
+			}
+			
 			while ( $pages->have_posts() ) : $pages->the_post();
 
 				global $post;
-				
-				echo '<li id="menuItem_' . get_the_id() . '" class="page-row';
+				$this->setPostData($post);
+				if ( get_post_status(get_the_id()) !== 'trash' ) :
 
-				// Published?
-				if ( $post->post_status == 'publish' ) echo ' published';
-				
-				// Hidden in Nested Pages?
-				$np_status = get_post_meta( get_the_id(), 'nested_pages_status', true );
-				$np_status = ( $np_status == 'hide' ) ? 'hide' : 'show';
-				if ( $np_status == 'hide' ) echo ' np-hide';
+					echo '<li id="menuItem_' . get_the_id() . '" class="page-row';
 
-				// Taxonomies
-				echo ' ' . $this->hierarchicalTaxonomies( get_the_id() );
-				
-				echo '">';
+					// Published?
+					if ( $post->post_status == 'publish' ) echo ' published';
+					
+					// Hidden in Nested Pages?
+					if ( $this->post_data['np_status'] == 'hide' ) echo ' np-hide';
+
+					// Taxonomies
+					echo ' ' . $this->hierarchicalTaxonomies( get_the_id() );
+					
+					echo '">';
+					
 					$count++;
-					
-					$template = get_post_meta(get_the_id(), '_wp_page_template', true);
-					
-					// Show Hide in generated nav menu
-					$ns = get_post_meta( get_the_id(), 'np_nav_status', true);
-					$nav_status = ( $ns == 'hide' ) ? 'hide' : 'show';
 
-					// Menu Title
-					$nav_title = get_post_meta(get_the_id(), 'np_nav_title', true);
-					
-					// Date Vars
-					$d = get_the_time('d');
-					$month = get_the_time('m');
-					$y = get_the_time('Y');
-					$h = get_the_time('H');
-					$m = get_the_time('i');
+					if ( get_post_type() == 'page' ){
+						include( NP_Helpers::view('row') );
+					} else {
+						include( NP_Helpers::view('row-redirect') );
+					}
 
-					if ( function_exists('wpseo_translate_score') ) {
-						$yoast_score = get_post_meta(get_the_id(), '_yoast_wpseo_linkdex', true);
-						$score = wpseo_translate_score($yoast_score);
-					};
-					
-					include( dirname( dirname(__FILE__) ) . '/views/row.php');
+				endif; // trash status
+				
 				$this->loopPages(get_the_id(), $count);
-				echo '</li>';
+
+				if ( get_post_status(get_the_id()) !== 'trash' ) {
+					echo '</li>';
+				}				
 
 			endwhile; // Loop
-			echo '</ol>';
+			
+			if ( $this->publishCount($pages) > 1 ){
+				echo '</ol>';
+			}
+
 		endif; wp_reset_postdata();
 	}
 
