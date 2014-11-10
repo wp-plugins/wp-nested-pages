@@ -66,6 +66,10 @@ Hierarchical taxonomies are currently supported
 
 == Changelog ==
 
+= 1.1.11 =
+* Status bug fix in pages view
+* Option to customize the generated nav menu added
+
 = 1.1 =
 * Expanded/Collapsed states now saved for each user
 * Trash functionality added
@@ -79,7 +83,7 @@ Hierarchical taxonomies are currently supported
 
 == Upgrade Notice ==
 
-= 1.1.1 =
+= 1.1 =
 Several new features have been added in version 1.1, including: saved toggle states, additional menu options, trash functionality, ability to add "link" menu items, and more.
 
 == More Information ==
