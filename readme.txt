@@ -66,9 +66,11 @@ Hierarchical taxonomies are currently supported
 
 == Changelog ==
 
+= 1.1.3 =
+* Option to customize the generated nav menu added
+
 = 1.1.2 =
 * Status bug fix in pages view
-* Option to customize the generated nav menu added
 
 = 1.1 =
 * Expanded/Collapsed states now saved for each user
@@ -83,8 +85,11 @@ Hierarchical taxonomies are currently supported
 
 == Upgrade Notice ==
 
+= 1.1.3 =
+Added option to rename the generated nav menu.
+
 = 1.1.2 =
-Includes fix for pages view that was preventing draft and private pages from being loaded. Added option to rename the generated nav menu.
+Includes fix for pages view that was preventing draft and private pages from being loaded.
 
 = 1.1 =
 Several new features have been added in version 1.1, including: saved toggle states, additional menu options, trash functionality, ability to add "link" menu items, and more.
