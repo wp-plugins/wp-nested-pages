@@ -30,6 +30,9 @@
 		</div>
 
 		<?php 
+		/*
+		* Authors Dropdown
+		*/
 		$authors_dropdown = '';
 		if ( is_super_admin() || current_user_can( $post_type_object->cap->edit_others_posts ) ) :
 			$users_opt = array(
@@ -73,6 +76,21 @@
 				<?php page_template_dropdown() ?>
 			</select>
 		</div>
+
+		<?php if ( $can_publish ) : ?>
+		<div class="form-control password">
+			<label><?php _e( 'Password' ); ?></label>
+			<input type="text" class="post_password" name="post_password" value="" />
+			<div class="private">
+				<em style="margin:2px 8px 0 0" class="alignleft"><?php _e( '&ndash;OR&ndash;' ); ?></em>
+				<label>
+					<input type="checkbox" class="keep_private" name="keep_private" value="private" />
+					<?php echo __( 'Private' ); ?>
+				</label>
+			</div>
+		</div>
+		<?php endif; ?>
+
 		<div class="comments">
 			<label>
 				<input type="checkbox" name="comment_status" class="np_cs" value="open" />
@@ -86,18 +104,16 @@
 				<input type="checkbox" name="nested_pages_status" class="np_status" value="hide" />
 				<span class="checkbox-title"><?php _e( 'Hide in Nested Pages' ); ?></span>
 			</label>
-		</div>			
+		</div>
 		<?php endif; // Edit theme options?>
 
-		<?php if ( current_user_can('edit_theme_options') ) : // Menu Options Button ?>
-		<div class="form-control">
-			<a href="#" class="np-btn np-toggle-menuoptions"><?php _e('Menu Options', 'nestedpages'); ?></a>
-		</div>
-		<?php endif; ?>
 
-		<?php if ( !empty($this->h_taxonomies) ) : ?>
-		<div class="form-control">
-			<a href="#" class="np-btn np-toggle-taxonomies"><?php _e('Edit Taxonomies', 'nestedpages'); ?></a>
+		<?php if ( current_user_can('edit_theme_options') ) : // Menu Options Button ?>
+		<div class="form-control np-toggle-options">
+			<a href="#" class="np-btn np-btn-half np-toggle-menuoptions"><?php _e('Menu Options', 'nestedpages'); ?></a>
+			<?php if ( !empty($this->h_taxonomies) ) : ?>
+			<a href="#" class="np-btn np-btn-half btn-right np-toggle-taxonomies"><?php _e('Taxonomies', 'nestedpages'); ?></a>
+			<?php endif; ?>
 		</div>
 		<?php endif; ?>
 
@@ -112,6 +128,13 @@
 				<ul class="cat-checklist <?php echo esc_attr( $taxonomy->name )?>-checklist">
 					<?php wp_terms_checklist( null, array( 'taxonomy' => $taxonomy->name ) ) ?>
 				</ul>
+			</div><!-- .np-taxonomy -->
+		<?php endforeach; ?>
+
+		<?php foreach ( $this->f_taxonomies as $taxonomy ) : ?>
+			<div class="np-taxonomy">
+				<span class="title"><?php echo esc_html( $taxonomy->labels->name ) ?></span>
+				<textarea id="<?php echo esc_attr($taxonomy->name); ?>" cols="22" rows="1" name="tax_input[<?php echo esc_attr( $taxonomy->name )?>]" class="tax_input_<?php echo esc_attr( $taxonomy->name )?>" data-autotag data-taxonomy="<?php echo esc_attr($taxonomy->name); ?>"></textarea>
 			</div><!-- .np-taxonomy -->
 		<?php endforeach; ?>
 	</div><!-- .taxonomies -->

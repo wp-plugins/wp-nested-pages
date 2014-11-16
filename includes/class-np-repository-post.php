@@ -10,10 +10,12 @@ class NP_PostRepository {
 	*/
 	protected $validation;
 
+
 	/**
 	* New Post ID
 	*/
 	protected $new_id;
+
 
 	public function __construct()
 	{
@@ -33,7 +35,7 @@ class NP_PostRepository {
 		foreach( $posts as $key => $post )
 		{
 			wp_update_post(array(
-				'ID' => $post['id'],
+				'ID' => sanitize_text_field($post['id']),
 				'menu_order' => $key,
 				'post_parent' => $parent
 			));
@@ -57,6 +59,12 @@ class NP_PostRepository {
 		$date = $this->validation->validateDate($data);
 		if ( !isset($_POST['comment_status']) ) $data['comment_status'] = 'closed';
 
+		if ( isset($_POST['keep_private']) && $_POST['keep_private'] == 'private' ){
+			$status = 'private';
+		} else {
+			$status = ( isset($data['_status']) ) ? sanitize_text_field($data['_status']) : 'publish';
+		}
+
 		$updated_post = array(
 			'ID' => sanitize_text_field($data['post_id']),
 			'post_title' => sanitize_text_field($data['post_title']),
@@ -64,7 +72,8 @@ class NP_PostRepository {
 			'post_name' => sanitize_text_field($data['post_name']),
 			'post_date' => $date,
 			'comment_status' => sanitize_text_field($data['comment_status']),
-			'post_status' => sanitize_text_field($data['_status'])
+			'post_status' => $status,
+			'post_password' => sanitize_text_field($data['post_password'])
 		);
 		wp_update_post($updated_post);
 
@@ -73,7 +82,7 @@ class NP_PostRepository {
 
 		// Taxonomies
 		$this->updateCategories($data);
-		$this->updateHierarchicalTaxonomies($data);
+		$this->updateTaxonomies($data);
 
 		// Menu Options
 		$this->updateNavStatus($data);
@@ -214,18 +223,51 @@ class NP_PostRepository {
 	* @since 1.0
 	* @param array data
 	*/
-	private function updateHierarchicalTaxonomies($data)
+	private function updateTaxonomies($data)
 	{
 		if ( isset($data['tax_input']) ) {
 			foreach ( $data['tax_input'] as $taxonomy => $term_ids ){
-				$this->validation->validateIntegerArray($term_ids);
-				$terms = array();
-				foreach ( $term_ids as $term ){
-					if ( $term !== 0 ) $terms[] = (int) $term;
+				$tax = get_taxonomy($taxonomy);
+				if ( $tax->hierarchical ){
+					$this->validation->validateIntegerArray($term_ids);
+					$this->updateHierarchicalTaxonomies($data, $taxonomy, $term_ids);
+				} else {
+					$this->updateFlatTaxonomy($data, $taxonomy, $term_ids);
 				}
-				wp_set_post_terms($data['post_id'], $terms, $taxonomy);
 			}
 		}
+	}
+
+
+	/**
+	* Update Hierarchical Taxonomy Terms
+	* @since 1.1.4
+	* @param array data
+	*/
+	private function updateHierarchicalTaxonomies($data, $taxonomy, $term_ids)
+	{
+		$terms = array();
+		foreach ( $term_ids as $term ){
+			if ( $term !== 0 ) $terms[] = (int) $term;
+		}
+		wp_set_post_terms($data['post_id'], $terms, $taxonomy);
+	}
+
+
+	/**
+	* Update Flat Taxonomy Terms
+	* @since 1.1.4
+	* @param array data
+	*/
+	private function updateFlatTaxonomy($data, $taxonomy, $terms)
+	{
+		$terms = explode(',', sanitize_text_field($terms));
+		$new_terms = array();
+		foreach($terms as $term)
+		{
+			if ( $term !== "" )	array_push($new_terms, $term);
+		}
+		wp_set_post_terms($data['post_id'], $new_terms, $taxonomy);
 	}
 
 
@@ -294,6 +336,46 @@ class NP_PostRepository {
 		$this->updateNestedPagesStatus($data);
 		$this->updateLinkTarget($data);
 		return $this->new_id;
+	}
+
+
+	/**
+	* Get count of hidden pages
+	* @since 1.1.4
+	*/
+	public function getHiddenCount()
+	{
+		$hidden = new WP_Query(array(
+			'post_type' => array('page', 'np-redirect'),
+			'meta_key' => 'nested_pages_status',
+			'meta_value' => 'hide',
+			'perm' => 'readable'));
+		return $hidden->found_posts;
+	}
+
+
+	/**
+	* Get Trash Count (pages)
+	* @since 1.1.4
+	*/
+	public function trashedPagesCount()
+	{
+		$trashed = new WP_Query(array('post_type'=>'page','post_status'=>'trash','posts_per_page'=>-1));
+		return $trashed->found_posts;
+	}
+
+
+	/**
+	* Get count of published posts
+	* @param object $pages
+	*/
+	public function publishCount($pages)
+	{
+		$publish_count = 1;
+		foreach ( $pages->posts as $p ){
+			if ( $p->post_status !== 'trash' ) $publish_count++;
+		}
+		return $publish_count;
 	}
 
 }

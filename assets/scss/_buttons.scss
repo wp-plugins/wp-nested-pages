@@ -20,6 +20,16 @@
 	}
 }
 
+.np-btn-half {
+	float: left;
+	width: 47%;
+	padding: 3px 0px;
+	text-align: center;
+	&.btn-right {
+		float: right;
+	}
+}
+
 
 .np-btn-trash {
 	background-color: $red;

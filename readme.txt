@@ -5,6 +5,7 @@ Tags: pages, admin, nested, tree view, page tree, sort, quick edit
 Requires at least: 3.8
 Tested up to: 4.0
 Stable tag: 1.1.3
+
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,8 +52,6 @@ Custom columns are not currently supported by Nested Pages. To view custom colum
 = What are those dots in my page rows? =
 If you have Wordpress SEO by Yoast installed, your page score indicators are shown along with the pages.
 
-= Does quick edit support taxonomies? =
-Hierarchical taxonomies are currently supported
 
 == Screenshots ==
 
@@ -65,6 +64,11 @@ Hierarchical taxonomies are currently supported
 4. Toggle nested child pages for a clutter-free tree
 
 == Changelog ==
+
+= 1.1.4 =
+* Password/Private functionality added to page quick edit
+* Flat taxonomy support added to page quick edit
+* Quick edit UI enhancements
 
 = 1.1.3 =
 * Option to customize the generated nav menu added
@@ -84,6 +88,9 @@ Hierarchical taxonomies are currently supported
 * Nested Pages
 
 == Upgrade Notice ==
+
+= 1.1.4 =
+Added additional quick edit functionality along with UI enhancements.
 
 = 1.1.3 =
 Added option to rename the generated nav menu.
