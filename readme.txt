@@ -69,6 +69,7 @@ If you have Wordpress SEO by Yoast installed, your page score indicators are sho
 * Password/Private functionality added to page quick edit
 * Flat taxonomy support added to page quick edit
 * Quick edit UI enhancements
+* Cross-domain icon font issue addressed
 
 = 1.1.3 =
 * Option to customize the generated nav menu added
