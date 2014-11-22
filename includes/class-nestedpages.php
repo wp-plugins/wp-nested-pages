@@ -9,6 +9,7 @@ require_once('class-np-handler-quickedit-redirect.php');
 require_once('class-np-handler-newredirect.php');
 require_once('class-np-handler-syncmenu.php');
 require_once('class-np-handler-nesttoggle.php');
+require_once('class-np-handler-gettax.php');
 
 // Required Classes
 require_once('class-np-dependencies.php');
@@ -17,8 +18,6 @@ require_once('class-np-newpage.php');
 require_once('class-np-redirects.php');
 require_once('class-np-posttypes.php');
 require_once('class-np-settings.php');
-require_once('class-np-updates.php');
-require_once('class-np-handler-gettax.php');
 
 /**
 * Primary Plugin Class
@@ -41,7 +40,6 @@ class NestedPages {
 	public function init()
 	{
 		new NP_Activate;
-		new NP_Updates;
 		new NP_Dependencies;
 		new NP_PageListing;
 		new NP_NewPage;
@@ -82,7 +80,7 @@ class NestedPages {
 	*/
 	public function settingsLink($links)
 	{ 
-  		$settings_link = '<a href="options-general.php?page=nested-pages-settings">' . __('Settings','nestedpages') . '</a>'; 
+  		$settings_link = '<a href="options-general.php?page=nested-pages-settings">' . __('Settings') . '</a>'; 
   		array_unshift($links, $settings_link); 
   		return $links; 
 	}
