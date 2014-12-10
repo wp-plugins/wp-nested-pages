@@ -2,6 +2,7 @@
 require_once('class-np-confirmation.php');
 require_once('class-np-helpers.php');
 require_once('class-np-repository-post.php');
+require_once('class-np-repository-user.php');
 /**
 * Primary Listing Class
 * Initiates Page Listing screen (overwriting default), and displays primary plugin view.
@@ -42,9 +43,16 @@ class NP_PageListing {
 	private $post_repo;
 
 
+	/**
+	* User Repository
+	*/
+	private $user;
+
+
 	public function __construct()
 	{
 		$this->post_repo = new NP_PostRepository;
+		$this->user = new NP_UserRepository;
 		$this->setPostType();
 		add_action( 'admin_menu', array($this, 'adminMenu') );
 		add_action( 'admin_menu', array($this, 'submenu') );
@@ -56,7 +64,7 @@ class NP_PageListing {
 	*/
 	public function adminMenu()
 	{
-		if ( current_user_can('edit_pages') ){
+		if ( (current_user_can('edit_pages')) || ($this->user->canSortPages()) ){
 			add_menu_page( 
 				__($this->post_type->labels->name),
 				__($this->post_type->labels->name),
@@ -88,7 +96,9 @@ class NP_PageListing {
 		global $submenu;
 		$submenu['nestedpages'][50] = array( __('All Pages','nestedpages'), 'publish_pages', esc_url(admin_url('admin.php?page=nestedpages')) );
 		$submenu['nestedpages'][60] = array( __('Add New','nestedpages'), 'publish_pages', $this->addNewPageLink() );
-		$submenu['nestedpages'][70] = array( __('Default Pages','nestedpages'), 'publish_pages', $this->defaultPagesLink() );
+		if ( get_option('nestedpages_hidedefault') !== 'hide' ){
+			$submenu['nestedpages'][70] = array( __('Default Pages','nestedpages'), 'publish_pages', $this->defaultPagesLink() );
+		}
 	}
 
 
@@ -219,7 +229,7 @@ class NP_PageListing {
 		$compared = array_intersect($this->visiblePages(), $children);
 
 		if ( $count == 1 ) {
-			echo ( current_user_can('edit_theme_options') ) 
+			echo ( $this->user->canSortPages() ) 
 				? '<ol class="sortable nplist">' 
 				: '<ol class="sortable no-sort nplist">';
 		} else {
@@ -299,14 +309,16 @@ class NP_PageListing {
 	private function loopPages($parent_id = 0, $count = 0)
 	{
 		$this->setTaxonomies();
-		$pages = new WP_Query(array(
+		$query_args = array(
 			'post_type' => array('page','np-redirect'),
 			'posts_per_page' => -1,
 			'orderby' => 'menu_order',
 			'post_status' => array('publish', 'pending', 'draft', 'private', 'future', 'trash'),
 			'post_parent' => $parent_id,
 			'order' => 'ASC'
-		));
+		);
+		$pages = new WP_Query(apply_filters('nestedpages_page_listing', $query_args));
+		
 		if ( $pages->have_posts() ) :
 			$count++;
 
