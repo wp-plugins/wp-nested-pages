@@ -316,8 +316,9 @@ jQuery(function($){
 	});
 
 	// Hide the form when clicking modal overlay
-	$(document).on('click', '.np-quick-edit-overlay', function(e){
+	$(document).on('click', '.np-inline-overlay', function(e){
 		revert_quick_edit();
+		revert_new_child();
 	});
 
 	// Cancel the form
@@ -418,6 +419,7 @@ jQuery(function($){
 	*/
 	function populate_quick_edit(form, data)
 	{
+		$(form).find('.page_id').html('<em>Page ID:</em> ' + data.id);
 		$(form).find('.np_id').val(data.id);
 		$(form).find('.np_title').val(data.title);
 		$(form).find('.np_slug').val(data.slug);
@@ -580,9 +582,9 @@ jQuery(function($){
 	*/
 	function show_quick_edit_overlay()
 	{
-		$('body').append('<div class="np-quick-edit-overlay"></div>');
+		$('body').append('<div class="np-inline-overlay"></div>');
 		setTimeout(function(){
-			$('.np-quick-edit-overlay').addClass('active');
+			$('.np-inline-overlay').addClass('active');
 		}, 50);
 	}
 
@@ -591,7 +593,7 @@ jQuery(function($){
 	*/
 	function remove_quick_edit_overlay()
 	{
-		$('.np-quick-edit-overlay').removeClass('active').remove();
+		$('.np-inline-overlay').removeClass('active').remove();
 	}
 
 
@@ -609,7 +611,6 @@ jQuery(function($){
 			datatype: 'json',
 			data: $(form).serialize() + '&action=npquickedit&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
 			success: function(data){
-				console.log(data);
 				if (data.status === 'error'){
 					np_remove_qe_loading(form);
 					$(form).find('.np-quickedit-error').text(data.message).show();
@@ -779,7 +780,7 @@ jQuery(function($){
 	*/
 	function np_remove_qe_loading(form)
 	{
-		$(form).find('.np-save-quickedit, .np-save-quickedit-redirect').removeAttr('disabled');
+		$(form).find('.np-save-quickedit, .np-save-quickedit-redirect, .np-save-newchild').removeAttr('disabled');
 		$(form).find('.np-qe-loading').hide();
 	}
 
@@ -788,10 +789,10 @@ jQuery(function($){
 	*/
 	function np_qe_update_animate(form)
 	{	
-		var row = $(form).parent('.quick-edit').siblings('.row');
+		var row = $(form).parent('.quick-edit, .new-child').siblings('.row');
 		$(row).addClass('np-updated');
 		$(row).show();
-		$(form).parent('.quick-edit').remove();
+		$(form).parent('.quick-edit, .new-child').remove();
 		remove_quick_edit_overlay();
 		np_set_borders();
 		setTimeout(function(){
@@ -908,7 +909,6 @@ jQuery(function($){
 			datatype: 'json',
 			data: $(form).serialize() + '&action=npquickeditredirect&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
 			success: function(data){
-				console.log(data);
 				if (data.status === 'error'){
 					np_remove_qe_loading(form);
 					$(form).find('.np-quickedit-error').text(data.message).show();
@@ -1026,7 +1026,6 @@ jQuery(function($){
 			datatype: 'json',
 			data: data + '&action=npnewredirect&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
 			success: function(data){
-				console.log(data);
 				if (data.status === 'error'){
 					np_remove_link_loading();
 					$('.np-new-link-error').text(data.message).show();
@@ -1171,6 +1170,226 @@ jQuery(function($){
 				}
 			}
 		});
+	}
+
+
+
+
+
+	/**
+	* ------------------------------------------------------------------------
+	* New Child Page(s)
+	* ------------------------------------------------------------------------
+	**/
+
+	/**
+	* Remove the new page form and restore the row
+	*/
+	function revert_new_child()
+	{
+		$('.np-newchild-error').hide();
+		remove_quick_edit_overlay();
+		$('.sortable .new-child').remove();
+		$('.row').show();
+	}
+
+	$(document).on('click', '.np-cancel-newchild', function(e){
+		e.preventDefault();
+		revert_new_child();
+	});
+
+	/**
+	* Show the New Page Form
+	*/
+	$(document).on('click', '.add-new-child', function(e){
+		e.preventDefault();
+		populate_new_child($(this));
+	});
+
+
+	/**
+	* Set the Form Data for adding new child & Show it
+	*/
+	function populate_new_child(item)
+	{
+		var parent_li = $(item).closest('.row').parent('li');
+
+		// Append the form to the list item
+		if ( $(parent_li).children('ol').length > 0 ){
+			var child_ol = $(parent_li).children('ol');
+			var newform = $('.new-child-form').clone().insertBefore(child_ol);
+		} else {
+			var newform = $('.new-child-form').clone().appendTo(parent_li);
+		}
+
+		var row = $(newform).siblings('.row').hide();
+
+		show_quick_edit_overlay();
+
+		$(newform).find('.parent_name').html('<em>Parent:</em> ' + $(item).attr('data-parentname'));
+		$(newform).find('.page_parent_id').val($(item).attr('data-id'));
+		$(newform).show();
+	}
+
+
+	/**
+	* Add a Page Title Field
+	*/
+	$(document).on('click', '.add-new-child-row', function(e){
+		e.preventDefault();
+		add_new_title_field($(this));
+		var form = $(this).parents('form');
+		update_pages_text(form);
+	});
+
+	/**
+	* Add a new title field
+	*/
+	function add_new_title_field(item)
+	{
+		var html = '<li><i class="handle np-icon-menu"></i><div class="form-control new-child-row"><label>' + nestedpages.title + '</label><div><input type="text" name="post_title[]" class="np_title" placeholder="' + nestedpages.page_title + '" value="" /><a href="#" class="button-secondary np-remove-child">-</a></div></div></li>';
+		var container = $(item).siblings('.new-page-titles').append(html);
+		// Make sortable
+		$('.new-page-titles').sortable({
+			items : 'li',
+			handle: '.handle',
+		});
+	}
+
+	/**
+	* Update Pages Text
+	* Toggle between singular and plural text for adding new page(s)
+	*/
+	function update_pages_text(form)
+	{
+		var count = $(form).find($('.new-child-row')).length;
+		if ( count > 1 ){
+			$(form).find('h3 strong').text(nestedpages.add_child_pages);
+			$(form).find('.np-save-newchild').text(nestedpages.add_pages + ' (' + count + ')');
+		} else {
+			$(form).find('h3 strong').text(nestedpages.add_child);
+			$(form).find('.np-save-newchild').text(nestedpages.add_page);
+		}
+	}
+
+	/**
+	* Remove New Child Page Field
+	*/
+	$(document).on('click', '.np-remove-child', function(e){
+		e.preventDefault();
+		var form = $(this).parents('form');
+		$(this).parents('.new-child-row').parent('li').remove();
+		update_pages_text(form);
+	});
+
+
+	/**
+	* Submit the new child page form
+	*/
+	$(document).on('click', '.np-save-newchild', function(e){
+		e.preventDefault();
+		$(this).prop('disabled', 'disabled');
+		var form = $(this).parents('form');
+		$(form).find('.np-qe-loading').show();
+		submit_new_child_form(form);
+	});
+
+
+	/**
+	* Process New Child Form
+	*/
+	function submit_new_child_form(form)
+	{
+		$('.np-quickedit-error').hide();
+		var syncmenu = ( $('.np-sync-menu').is(':checked') ) ? 'sync' : 'nosync';
+		$.ajax({
+			url: ajaxurl,
+			type: 'post',
+			datatype: 'json',
+			data: $(form).serialize() + '&action=npnewchild&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			success: function(data){
+				if (data.status === 'error'){
+					np_remove_qe_loading(form);
+					$(form).find('.np-quickedit-error').text(data.message).show();
+				} else {
+					np_remove_qe_loading(form);
+					add_new_child_pages(form, data);
+				}
+			},
+			error: function(){
+				np_remove_qe_loading(form);
+				$(form).find('.np-quickedit-error').text('The form could not be saved at this time.').show();
+			}
+		});
+	}
+
+
+	/**
+	* Add the Child New Pages
+	*/
+	function add_new_child_pages(form, data)
+	{
+		var pages = data.new_pages;
+		var parent_li = $(form).parent('.new-child').parent('.page-row');
+		
+		// If parent li doesn't have a child ol, add one
+		if ( $(parent_li).children('ol').length === 0 ){
+			$(parent_li).append('<ol class="nplist"></ol>');
+		}
+		var appendto = $(parent_li).children('ol');
+
+		for (i = 0; i < pages.length; i++){
+			append_new_child_row(appendto, pages[i]);
+		}
+
+		// Show the child page list and reset submenu toggles
+		$(appendto).show();
+		add_remove_submenu_toggles();
+		np_qe_update_animate(form);
+	}
+
+
+	/**
+	* Append the Row to the View
+	*/
+	function append_new_child_row(appendto, page)
+	{
+		var html = '<li id="menuItem_' + page.id + '" class="page-row';
+		if ( page.status === 'publish' ) html += ' published';
+		html += '">';
+		html += '<div class="row">';
+		html += '<div class="child-toggle"></div>';
+		html += '<div class="row-inner">';
+		html += '<i class="np-icon-sub-menu"></i><i class="handle np-icon-menu"></i>';
+		html += '<a href="' + page.edit_link + '" class="page-link page-title">';
+		html += '<span class="title">' + page.title + '</span>';
+		
+		// Status
+		if ( page.status !== 'Publish' ){
+			html += '<span class="status">(' + page.status + ')</span>';
+		} else {
+			html += '<span class="status"></span>';
+		}
+
+		html += '<span class="nav-status"></span><span class="edit-indicator"><i class="np-icon-pencil"></i>Edit</span>';
+		html += '</a>';
+
+		// Action Buttons
+		html += '<div class="action-buttons">';
+		html += '<a href="#" class="np-btn open-redirect-modal" data-parentid="' + page.id + '"><i class="np-icon-link"></i></a>';
+		html += '<a href="#" class="np-btn add-new-child" data-id="' + page.id + '" data-parentname="' + page.title + '">' + nestedpages.add_child_short + '</a>';
+		
+		// Quick Edit (data attrs)
+		html += '<a href="#" class="np-btn np-quick-edit" data-id="' + page.id + '" data-template="' + page.template + '" data-title="' + page.title + '" data-slug="' + page.slug + '" data-commentstatus="closed" data-status="' + page.status.toLowerCase() + '" data-np-status="show"	data-navstatus="show" data-author="' + page.author + '" data-month="' + page.month + '" data-day="' + page.day + '" data-year="' + page.year + '" data-hour="' + page.hour + '" data-minute="' + page.minute + '">' + nestedpages.quick_edit + '</a>';
+
+		html += '<a href="' + page.view_link + '" class="np-btn" target="_blank">' + nestedpages.view + '</a>';
+		html += '<a href="' + page.delete_link + '" class="np-btn np-btn-trash"><i class="np-icon-remove"></i></a>';
+		html += '</div><!-- .action-buttons -->';
+
+		html += '</div><!-- .row-inner --></div><!-- .row -->';
+		html += '</li>';
+
+		$(appendto).append(html);
 	}
 
 

@@ -28,20 +28,23 @@
 
 	<img src="<?php echo plugins_url(); ?>/wp-nested-pages/assets/images/loading.gif" alt="loading" id="nested-loading" />
 
-	<ul class="subsubsub">
-		<li><a href="#all" class="np-toggle-publish active"><?php _e('All'); ?></a> | </li>
-		<li><a href="#published" class="np-toggle-publish"><?php _e('Published'); ?></a> | </li>
-		<li><a href="#show" class="np-toggle-hidden"><?php _e('Show Hidden', 'nestedpages'); ?> </a>
-			<span class="count">(<?php echo $this->post_repo->getHiddenCount(); ?>)</span> | </li>
-		<?php if ( current_user_can('delete_pages') ) : ?>
-		<li><a href="edit.php?post_status=trash&post_type=page"><?php _e('Trash'); ?> </a>
-			<span class="count">(<?php echo $this->post_repo->trashedPagesCount(); ?>)</span></li>
-		<?php endif; ?>
-		<?php if ( get_option('nestedpages_hidedefault') !== 'hide' ) : ?>
-		<li> | <a href="<?php echo $this->defaultPagesLink(); ?>"><?php _e('Default'); ?> <?php _e($this->post_type->labels->name); ?></a></li>
-		<?php endif; ?>
-	</ul>
+	<div class="nestedpages-tools">
 
+		<ul class="subsubsub">
+			<li><a href="#all" class="np-toggle-publish active"><?php _e('All'); ?></a> | </li>
+			<li><a href="#published" class="np-toggle-publish"><?php _e('Published'); ?></a> | </li>
+			<li><a href="#show" class="np-toggle-hidden"><?php _e('Show Hidden', 'nestedpages'); ?> </a>
+				<span class="count">(<?php echo $this->post_repo->getHiddenCount(); ?>)</span> | </li>
+			<?php if ( current_user_can('delete_pages') ) : ?>
+			<li><a href="edit.php?post_status=trash&post_type=page"><?php _e('Trash'); ?> </a>
+				<span class="count">(<?php echo $this->post_repo->trashedPagesCount(); ?>)</span></li>
+			<?php endif; ?>
+			<?php if ( get_option('nestedpages_hidedefault') !== 'hide' ) : ?>
+			<li> | <a href="<?php echo $this->defaultPagesLink(); ?>"><?php _e('Default'); ?> <?php _e($this->post_type->labels->name); ?></a></li>
+			<?php endif; ?>
+		</ul>
+
+	</div><!-- .nestedpages-tools -->
 
 	<div id="np-error" class="updated error" style="clear:both;display:none;"></div>
 
@@ -49,13 +52,17 @@
 	<div class="nestedpages">
 		<?php $this->loopPages(); ?>
 		
-		<div class="quick-edit quick-edit-form" style="display:none;">
+		<div class="quick-edit quick-edit-form np-inline-modal" style="display:none;">
 			<?php include( NP_Helpers::view('quickedit') ); ?>
 		</div>
 
 		<?php if ( current_user_can('publish_pages') ) : ?>
-		<div class="quick-edit quick-edit-form-redirect" style="display:none;">
+		<div class="quick-edit quick-edit-form-redirect np-inline-modal" style="display:none;">
 			<?php include( NP_Helpers::view('quickedit-redirect') ); ?>
+		</div>
+
+		<div class="new-child new-child-form np-inline-modal" style="display:none;">
+			<?php include( NP_Helpers::view('new-child') ); ?>
 		</div>
 		<?php endif; ?>
 	</div>
