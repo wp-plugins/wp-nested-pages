@@ -17,6 +17,7 @@ jQuery(function($){
 	$(document).ready(function(){
 		add_remove_submenu_toggles();
 		np_set_borders();
+		set_nested_margins();
 	});
 	
 	/**
@@ -29,6 +30,7 @@ jQuery(function($){
 		$(submenu).toggle();
 		np_set_borders();
 		np_sync_user_toggles();
+		set_nested_margins();
 	});
 
 	/**
@@ -101,6 +103,27 @@ jQuery(function($){
 	}
 
 	/**
+	* Adjust nested margins
+	* @since 1.1.10
+	*/
+	function set_nested_margins()
+	{
+		var lists = $('.nestedpages').find('.nplist');
+		$.each(lists, function(i, v){
+			
+				var parent_count = $(this).parents('.nplist').length;
+				var padding = 56;
+				if ( parent_count > 0 ){
+					var padding = ( parent_count * 20 ) + padding;
+					$(this).find('.row-inner').css('padding-left', padding + 'px');
+				} else {
+					$(this).find('.row-inner').css('padding-left', '0px');
+				}
+			
+		});
+	}
+
+	/**
 	* Toggle between showing published pages and all
 	*/
 	$(document).on('click', '.np-toggle-publish', function(e){
@@ -157,6 +180,7 @@ jQuery(function($){
 			toleranceElement: '> .row',
 			handle: '.handle',
 			placeholder: "ui-sortable-placeholder",
+			maxLevels: 0,
 			start: function(e, ui){
         		ui.placeholder.height(ui.item.height());
     		},
@@ -168,6 +192,7 @@ jQuery(function($){
     				function(){
     					add_remove_submenu_toggles();
     					np_set_borders();
+    					set_nested_margins();
     			}, 100
     			);
     			submit_sortable_form();
@@ -197,6 +222,7 @@ jQuery(function($){
 	{
 		var parentList = $(ui.placeholder).parent('ol');
 		if ( !$(parentList).is(':visible') ){
+			$(parentList).addClass('nplist');
 			$(parentList).show();
 		}
 	}
@@ -285,7 +311,7 @@ jQuery(function($){
 			type: 'post',
 			datatype: 'json',
 			data: {
-				action : 'npsyncmenu',
+				action : 'npsyncMenu',
 				nonce : nestedpages.np_nonce,
 				syncmenu : setting
 			},
@@ -391,6 +417,7 @@ jQuery(function($){
 		// Add Array of Taxonomies to the data object
 		data.h_taxonomies = [];
 		data.f_taxonomies = [];
+		
 		var classes = $(parent_li).attr('class').split(/\s+/);
 		for ( i = 0; i < classes.length; i++ ){
 			if ( classes[i].substring(0, 3) === 'in-'){
@@ -530,7 +557,7 @@ jQuery(function($){
 			type: 'post',
 			datatype: 'json',
 			data : {
-				action : 'gettax',
+				action : 'npgetTaxonomies',
 				nonce : nestedpages.np_nonce,
 				terms : taxonomies
 			},
@@ -546,10 +573,12 @@ jQuery(function($){
 	*/
 	function populate_flat_taxonomies(terms)
 	{
-		$.each(terms, function(i, v){
-			var textarea = $('#' + i);
-			$(textarea).val(v.join(','));
-		});
+		if ( terms ){
+			$.each(terms, function(i, v){
+				var textarea = $('#' + i);
+				$(textarea).val(v.join(','));
+			});
+		}
 	}
 
 
@@ -609,7 +638,7 @@ jQuery(function($){
 			url: ajaxurl,
 			type: 'post',
 			datatype: 'json',
-			data: $(form).serialize() + '&action=npquickedit&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			data: $(form).serialize() + '&action=npquickEdit&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
 			success: function(data){
 				if (data.status === 'error'){
 					np_remove_qe_loading(form);
@@ -907,7 +936,7 @@ jQuery(function($){
 			url: ajaxurl,
 			type: 'post',
 			datatype: 'json',
-			data: $(form).serialize() + '&action=npquickeditredirect&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			data: $(form).serialize() + '&action=npquickEditLink&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
 			success: function(data){
 				if (data.status === 'error'){
 					np_remove_qe_loading(form);
@@ -1024,7 +1053,7 @@ jQuery(function($){
 			url: ajaxurl,
 			type: 'post',
 			datatype: 'json',
-			data: data + '&action=npnewredirect&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			data: data + '&action=npnewLink&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
 			success: function(data){
 				if (data.status === 'error'){
 					np_remove_link_loading();
@@ -1080,6 +1109,10 @@ jQuery(function($){
 		html += 'data-navstatus="' + data.nav_status + '" ';
 		html += 'data-linktarget="' + data.link_target + '">'
 		html += 'Quick Edit</a>';
+
+		// Delete Link
+		html += '<a href="' + data.delete_link + '" class="np-btn np-btn-trash"><i class="np-icon-remove"></i></a>';
+
 		html += '</div></div></div></li>';
 
 		if ( data.parent_id === "0" ){
@@ -1160,7 +1193,7 @@ jQuery(function($){
 			type: 'post',
 			datatype: 'json',
 			data: {
-				action : 'npnesttoggle',
+				action : 'npnestToggle',
 				nonce : nestedpages.np_nonce,
 				ids : ids
 			},
@@ -1306,7 +1339,7 @@ jQuery(function($){
 			url: ajaxurl,
 			type: 'post',
 			datatype: 'json',
-			data: $(form).serialize() + '&action=npnewchild&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			data: $(form).serialize() + '&action=npnewChild&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
 			success: function(data){
 				if (data.status === 'error'){
 					np_remove_qe_loading(form);
