@@ -2,6 +2,7 @@
 
 use NestedPages\Controllers\PageListingController;
 use NestedPages\Helpers;
+use NestedPages\Entities\User\UserRepository;
 
 /**
 * Admin Menus
@@ -13,6 +14,11 @@ class AdminMenuController {
 	* Page Post Type
 	*/
 	private $post_type;
+
+	/**
+	* User Repository
+	*/
+	private $user;
 
 
 	public function __construct()
@@ -26,6 +32,7 @@ class AdminMenuController {
 	*/
 	public function adminMenu()
 	{
+		$this->user = new UserRepository;
 		$this->pageMenu();
 	}
 
