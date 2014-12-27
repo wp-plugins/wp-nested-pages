@@ -9,18 +9,19 @@ Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Nested Pages provides an intuitive drag and drop interface for managing pages in the WordPress admin, while maintaining quick edit functionality.
+Nested Pages provides a drag and drop interface for managing pages & posts in the WordPress admin, while maintaining quick edit functionality.
 
 == Description ==
 
-**Nested Pages offers**
+**Why use Nested Pages?**
 
-* A drag and drop interface for managing your pages - simple and intuitive
-* Quick edit functionality
-* An expandable, sortable tree view of your site's page structure
-* A native WordPress menu, automatically generated to match your Nested Pages screen
-* A way to quickly add child pages (ideal for development)
-* A touch-friendly interface
+* Provides a simple & intuitive drag and drop interface for managing your page structure and post ordering
+* Enhanced quick edit functionality
+* Adds an editable, sortable tree view of your site's page structure
+* Automatically generates a native WordPress menu that matches your page structure
+* A way to quickly add multiple pages & posts (ideal for development)
+* Works with any post type
+* Works on touch-enabled devices
 
 For more information visit [nestedpages.com](http://nestedpages.com).
 
@@ -29,6 +30,7 @@ For more information visit [nestedpages.com](http://nestedpages.com).
 **Languages:**
 
 * Danish (Thomas Blomberg)
+* Dutch (Arno Vije)
 * English
 * Finnish (Roni Laukkarinen)
 * French (Nico Mollet)
@@ -46,19 +48,19 @@ For more information visit [nestedpages.com](http://nestedpages.com).
 == Frequently Asked Questions ==
 
 = Can I use Nested Pages with other post types? =
-Nested Pages is currently limited to the WordPress “Page” post type.
+As of Nested Pages version 1.3.0, all post types are supported. To enable the Nested Pages interface for post types, update your settings under Settings > Nested Pages.
 
 = How do I access the WordPress “Pages” screen? =
-Click the “Default Pages” link in the page subnav, or on the Nested Pages screen. This item may be optionally hidden under the Nested Pages settings.
+Click the “Default link in the page subnav, or on the Nested Pages screen. This item may be optionally hidden under the Nested Pages settings.
 
 = How do I save the order I create? =
-Page sorting and nesting is saved in the background after changes are made to the structure.
+Post sorting and nesting is saved in the background after changes are made to the structure.
 
 = How do I edit in bulk? =
-Bulk quick edits are not currently supported by Nested Pages. To edit in bulk, click on “Default Pages” to use the native interface.
+Bulk quick edits are not currently supported by Nested Pages. To edit in bulk, click on the "Default" link to use the native interface.
 
 = What about custom columns? =
-Custom columns are not currently supported by Nested Pages. To view custom columns, click on “Default Pages” to view the native interface. If you are using WordPress SEO by Yoast, a page analysis indicator is shown.
+Custom columns are not currently supported by Nested Pages. To view custom columns, click on the "Default" link to view the native interface. If you are using WordPress SEO by Yoast, a page analysis indicator is shown.
 
 = What are those dots in my page rows? =
 If you have WordPress SEO by Yoast installed, your page score indicators are shown along with the pages.
@@ -74,9 +76,15 @@ If you have WordPress SEO by Yoast installed, your page score indicators are sho
 
 4. Toggle nested child pages for a clutter-free tree
 
-5. Quickly add child pages without leaving the page tree
+5. Quickly add posts without leaving the page tree
 
 == Changelog ==
+
+= 1.3.0 =
+* All public post types are now supported, both hierarchical and non-hierarchical. To enabled the Nested Pages interface for additional post types, visit Settings > Nested Pages and select the "Post Types" tab. The generated nav menu is tied to the pages type, which is enabled by default.
+* New interface for adding top-level posts/pages in bulk
+* New "Empty Trash" link for quickly emptying trash on enabled post types
+* Dutch translation (Provided by Arno Vije)
 
 = 1.2.1 =
 * Bug fixes when using custom roles (Thanks to Luis Martins for troubleshooting help)
@@ -140,10 +148,13 @@ If you have WordPress SEO by Yoast installed, your page score indicators are sho
 
 == Upgrade Notice ==
 
+= 1.3.0 =
+All post types are now supported. Also includes minor bug fixes and UI improvements.
+
 = 1.2.1 =
 Bug fix when using custom roles. 
 
-= 1.2.0 =
+= 1.2 =
 PHP 5.3.2 now required – Nested Pages will not install on older versions of PHP. If you are running less than 5.3.2, continue to use Nested Pages version 1.1.9.
 
 = 1.1.9 =

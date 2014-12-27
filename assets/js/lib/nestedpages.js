@@ -124,6 +124,15 @@ jQuery(function($){
 	}
 
 	/**
+	* Get Post Type from List ID
+	*/
+	function np_get_post_type()
+	{
+		var sortableID = $('.sortable').attr('id');
+		return sortableID.substring(3);
+	}
+
+	/**
 	* Toggle between showing published pages and all
 	*/
 	$(document).on('click', '.np-toggle-publish', function(e){
@@ -176,11 +185,11 @@ jQuery(function($){
 	*/
 	$(document).ready(function(){
 		$('.sortable').not('.no-sort').nestedSortable({
-			items : 'li',
+			items : '.page-row',
 			toleranceElement: '> .row',
 			handle: '.handle',
 			placeholder: "ui-sortable-placeholder",
-			maxLevels: 0,
+			maxLevels: max_levels(np_get_post_type()),
 			start: function(e, ui){
         		ui.placeholder.height(ui.item.height());
     		},
@@ -197,21 +206,35 @@ jQuery(function($){
     			);
     			submit_sortable_form();
     		},
-    		update: function(e, ui){
-    		}
 		});
 	});
+
+	/**
+	* Is Post Type Nestable?
+	*/
+	function max_levels(post_type)
+	{
+		var levels = 1;
+		$.each(nestedpages.post_types, function(i, v){
+			if ( v.name === post_type ){
+				if ( v.hierarchical === true ) levels = 0;
+			}
+		});
+		return levels;
+	}
 
 	/**
 	* Update the width of the placeholder
 	*/
 	function update_placeholder_width(ui)
 	{
-		var parentCount = $(ui.placeholder).parents('ol').length;
-		var listWidth = $('.sortable').width();
-		var offset = ( parentCount * 40 ) - 40;
-		var newWidth = listWidth - offset;
-		$(ui.placeholder).width(newWidth).css('margin-left', offset + 'px');
+		if ( max_levels(np_get_post_type()) === 0 ){
+			var parentCount = $(ui.placeholder).parents('ol').length;
+			var listWidth = $('.sortable').width();
+			var offset = ( parentCount * 40 ) - 40;
+			var newWidth = listWidth - offset;
+			$(ui.placeholder).width(newWidth).css('margin-left', offset + 'px');
+		}
 		update_list_visibility(ui);
 	}
 
@@ -266,6 +289,7 @@ jQuery(function($){
 				action : 'npsort',
 				nonce : nestedpages.np_nonce,
 				list : list,
+				post_type : np_get_post_type(),
 				syncmenu : syncmenu
 			},
 			success: function(data){
@@ -313,6 +337,7 @@ jQuery(function($){
 			data: {
 				action : 'npsyncMenu',
 				nonce : nestedpages.np_nonce,
+				post_type : np_get_post_type(),
 				syncmenu : setting
 			},
 			success: function(data){
@@ -330,7 +355,7 @@ jQuery(function($){
 
 	/**
 	* ------------------------------------------------------------------------
-	* Quick Edit - Pages
+	* Quick Edit - Posts
 	* ------------------------------------------------------------------------
 	**/
 
@@ -446,18 +471,23 @@ jQuery(function($){
 	*/
 	function populate_quick_edit(form, data)
 	{
-		$(form).find('.page_id').html('<em>Page ID:</em> ' + data.id);
+		$(form).find('.page_id').html('<em>ID:</em> ' + data.id);
 		$(form).find('.np_id').val(data.id);
 		$(form).find('.np_title').val(data.title);
 		$(form).find('.np_slug').val(data.slug);
 		$(form).find('.np_author select').val(data.author);
-		$(form).find('.np_template').val(data.template);
 		$(form).find('.np_status').val(data.status);
 		$(form).find('.np_nav_title').val(data.navtitle);
 		$(form).find('.np_title_attribute').val(data.navtitleattr);
 		$(form).find('.np_nav_css_classes').val(data.navcss);
 		$(form).find('.post_password').val(data.password);
 		if ( data.cs === 'open' ) $(form).find('.np_cs').prop('checked', 'checked');
+
+		if ( data.template !== '' ){
+			$(form).find('.np_template').val(data.template);
+		} else {
+			$(form).find('.np_template').val('default');
+		}
 
 		if ( data.status === 'private' ){
 			$(form).find('.post_password').prop('readonly', true);
@@ -638,7 +668,7 @@ jQuery(function($){
 			url: ajaxurl,
 			type: 'post',
 			datatype: 'json',
-			data: $(form).serialize() + '&action=npquickEdit&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			data: $(form).serialize() + '&action=npquickEdit&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu + '&post_type=' + np_get_post_type(),
 			success: function(data){
 				if (data.status === 'error'){
 					np_remove_qe_loading(form);
@@ -648,6 +678,9 @@ jQuery(function($){
 					np_update_qe_data(form, data.post_data);
 					np_qe_update_animate(form);
 				}
+			},
+			error: function(data){
+				console.log(data);
 			}
 		});
 	}
@@ -936,7 +969,7 @@ jQuery(function($){
 			url: ajaxurl,
 			type: 'post',
 			datatype: 'json',
-			data: $(form).serialize() + '&action=npquickEditLink&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			data: $(form).serialize() + '&action=npquickEditLink&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu + '&post_type=' + np_get_post_type(),
 			success: function(data){
 				if (data.status === 'error'){
 					np_remove_qe_loading(form);
@@ -1053,7 +1086,7 @@ jQuery(function($){
 			url: ajaxurl,
 			type: 'post',
 			datatype: 'json',
-			data: data + '&action=npnewLink&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			data: data + '&action=npnewLink&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu + '&post_type=' + np_get_post_type(),
 			success: function(data){
 				if (data.status === 'error'){
 					np_remove_link_loading();
@@ -1188,6 +1221,7 @@ jQuery(function($){
 	function np_sync_user_toggles()
 	{
 		var ids = np_get_visible_rows();
+		var posttype = np_get_post_type();
 		$.ajax({
 			url: ajaxurl,
 			type: 'post',
@@ -1195,7 +1229,8 @@ jQuery(function($){
 			data: {
 				action : 'npnestToggle',
 				nonce : nestedpages.np_nonce,
-				ids : ids
+				ids : ids,
+				posttype : posttype
 			},
 			success: function(data){
 				if ( data.status !== 'success' ){
@@ -1222,13 +1257,22 @@ jQuery(function($){
 	{
 		$('.np-newchild-error').hide();
 		remove_quick_edit_overlay();
+		$('#np-bulk-modal .modal-body').empty();
 		$('.sortable .new-child').remove();
 		$('.row').show();
 	}
 
+	/**
+	* Reset the bulk modal on close
+	*/
+	$('#np-bulk-modal').on('hide.bs.modal', function(){
+		revert_new_child();
+	});
+
 	$(document).on('click', '.np-cancel-newchild', function(e){
 		e.preventDefault();
 		revert_new_child();
+		$('#np-bulk-modal').modal('hide');
 	});
 
 	/**
@@ -1237,6 +1281,19 @@ jQuery(function($){
 	$(document).on('click', '.add-new-child', function(e){
 		e.preventDefault();
 		populate_new_child($(this));
+	});
+
+	/**
+	* Show the Add Bulk Modal Form
+	*/
+	$(document).on('click', '.open-bulk-modal', function(e){
+		e.preventDefault();
+		var newform = $('.new-child-form').clone().find('.np-new-child-form').addClass('in-modal');
+		$('#np-bulk-modal .modal-body').html(newform);
+		$('#np-bulk-modal .new-child-form').show();
+		$('#np-bulk-modal').find('h3').text(nestedpages.add_multiple);
+		$('#np-bulk-modal').find('.page_parent_id').val('0');
+		$('#np-bulk-modal').modal('show');
 	});
 
 
@@ -1250,9 +1307,9 @@ jQuery(function($){
 		// Append the form to the list item
 		if ( $(parent_li).children('ol').length > 0 ){
 			var child_ol = $(parent_li).children('ol');
-			var newform = $('.new-child-form').clone().insertBefore(child_ol);
+			var newform = $('.new-child-form').not('.np-modal .new-child-form').clone().insertBefore(child_ol);
 		} else {
-			var newform = $('.new-child-form').clone().appendTo(parent_li);
+			var newform = $('.new-child-form').not('.np-modal .new-child-form').clone().appendTo(parent_li);
 		}
 
 		var row = $(newform).siblings('.row').hide();
@@ -1280,7 +1337,7 @@ jQuery(function($){
 	*/
 	function add_new_title_field(item)
 	{
-		var html = '<li><i class="handle np-icon-menu"></i><div class="form-control new-child-row"><label>' + nestedpages.title + '</label><div><input type="text" name="post_title[]" class="np_title" placeholder="' + nestedpages.page_title + '" value="" /><a href="#" class="button-secondary np-remove-child">-</a></div></div></li>';
+		var html = '<li><i class="handle np-icon-menu"></i><div class="form-control new-child-row"><label>' + nestedpages.title + '</label><div><input type="text" name="post_title[]" class="np_title" placeholder="' + nestedpages.title + '" value="" /><a href="#" class="button-secondary np-remove-child">-</a></div></div></li>';
 		var container = $(item).siblings('.new-page-titles').append(html);
 		// Make sortable
 		$('.new-page-titles').sortable({
@@ -1297,11 +1354,13 @@ jQuery(function($){
 	{
 		var count = $(form).find($('.new-child-row')).length;
 		if ( count > 1 ){
+			$(form).find('.add-edit').hide();
 			$(form).find('h3 strong').text(nestedpages.add_child_pages);
-			$(form).find('.np-save-newchild').text(nestedpages.add_pages + ' (' + count + ')');
+			$(form).find('.np-save-newchild').text(nestedpages.add + ' (' + count + ')');
 		} else {
+			$(form).find('.add-edit').show();
 			$(form).find('h3 strong').text(nestedpages.add_child);
-			$(form).find('.np-save-newchild').text(nestedpages.add_page);
+			$(form).find('.np-save-newchild').text(nestedpages.add);
 		}
 	}
 
@@ -1317,6 +1376,14 @@ jQuery(function($){
 
 
 	/**
+	* Prevent New Child Page form Submission
+	*/
+	$(document).on('submit', '.np-new-child-form', function(e){
+		e.preventDefault();
+	});
+
+
+	/**
 	* Submit the new child page form
 	*/
 	$(document).on('click', '.np-save-newchild', function(e){
@@ -1324,14 +1391,15 @@ jQuery(function($){
 		$(this).prop('disabled', 'disabled');
 		var form = $(this).parents('form');
 		$(form).find('.np-qe-loading').show();
-		submit_new_child_form(form);
+		var addedit = ( $(this).hasClass('add-edit') ) ? true : false;
+		submit_new_child_form(form, addedit);
 	});
 
 
 	/**
 	* Process New Child Form
 	*/
-	function submit_new_child_form(form)
+	function submit_new_child_form(form, addedit)
 	{
 		$('.np-quickedit-error').hide();
 		var syncmenu = ( $('.np-sync-menu').is(':checked') ) ? 'sync' : 'nosync';
@@ -1339,14 +1407,21 @@ jQuery(function($){
 			url: ajaxurl,
 			type: 'post',
 			datatype: 'json',
-			data: $(form).serialize() + '&action=npnewChild&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu,
+			data: $(form).serialize() + '&action=npnewChild&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu + '&post_type=' + np_get_post_type(),
 			success: function(data){
+				console.log(data);
 				if (data.status === 'error'){
 					np_remove_qe_loading(form);
 					$(form).find('.np-quickedit-error').text(data.message).show();
 				} else {
-					np_remove_qe_loading(form);
-					add_new_child_pages(form, data);
+					if ( addedit === true ){ // Redirect to Edit Screen
+						var link = data.new_pages[0].edit_link;
+						link = link.replace(/&amp;/g, '&');
+						window.location.replace(link);
+					} else {
+						np_remove_qe_loading(form);
+						add_new_child_pages(form, data);
+					}
 				}
 			},
 			error: function(){
@@ -1369,7 +1444,12 @@ jQuery(function($){
 		if ( $(parent_li).children('ol').length === 0 ){
 			$(parent_li).append('<ol class="nplist"></ol>');
 		}
-		var appendto = $(parent_li).children('ol');
+
+		if ( $(form).hasClass('in-modal') ){
+			var appendto = $('.nplist.sortable li.page-row:first');
+		} else {
+			var appendto = $(parent_li).children('ol');
+		}
 
 		for (i = 0; i < pages.length; i++){
 			append_new_child_row(appendto, pages[i]);
@@ -1378,6 +1458,8 @@ jQuery(function($){
 		// Show the child page list and reset submenu toggles
 		$(appendto).show();
 		add_remove_submenu_toggles();
+		revert_new_child();
+		$('#np-bulk-modal').modal('hide');
 		np_qe_update_animate(form);
 	}
 
@@ -1390,8 +1472,14 @@ jQuery(function($){
 		var html = '<li id="menuItem_' + page.id + '" class="page-row';
 		if ( page.status === 'publish' ) html += ' published';
 		html += '">';
-		html += '<div class="row">';
-		html += '<div class="child-toggle"></div>';
+
+		if ( max_levels(np_get_post_type()) === 0 ){
+			html += '<div class="row">';
+			html += '<div class="child-toggle"></div>';
+		} else {
+			html += '<div class="row non-hierarchical">';
+		}
+
 		html += '<div class="row-inner">';
 		html += '<i class="np-icon-sub-menu"></i><i class="handle np-icon-menu"></i>';
 		html += '<a href="' + page.edit_link + '" class="page-link page-title">';
@@ -1413,7 +1501,7 @@ jQuery(function($){
 		html += '<a href="#" class="np-btn add-new-child" data-id="' + page.id + '" data-parentname="' + page.title + '">' + nestedpages.add_child_short + '</a>';
 		
 		// Quick Edit (data attrs)
-		html += '<a href="#" class="np-btn np-quick-edit" data-id="' + page.id + '" data-template="' + page.template + '" data-title="' + page.title + '" data-slug="' + page.slug + '" data-commentstatus="closed" data-status="' + page.status.toLowerCase() + '" data-np-status="show"	data-navstatus="show" data-author="' + page.author + '" data-month="' + page.month + '" data-day="' + page.day + '" data-year="' + page.year + '" data-hour="' + page.hour + '" data-minute="' + page.minute + '">' + nestedpages.quick_edit + '</a>';
+		html += '<a href="#" class="np-btn np-quick-edit" data-id="' + page.id + '" data-template="' + page.page_template + '" data-title="' + page.title + '" data-slug="' + page.slug + '" data-commentstatus="closed" data-status="' + page.status.toLowerCase() + '" data-np-status="show"	data-navstatus="show" data-author="' + page.author + '" data-template="' + page.template + '" data-month="' + page.month + '" data-day="' + page.day + '" data-year="' + page.year + '" data-hour="' + page.hour + '" data-minute="' + page.minute + '">' + nestedpages.quick_edit + '</a>';
 
 		html += '<a href="' + page.view_link + '" class="np-btn" target="_blank">' + nestedpages.view + '</a>';
 		html += '<a href="' + page.delete_link + '" class="np-btn np-btn-trash"><i class="np-icon-remove"></i></a>';
@@ -1422,7 +1510,92 @@ jQuery(function($){
 		html += '</div><!-- .row-inner --></div><!-- .row -->';
 		html += '</li>';
 
-		$(appendto).append(html);
+		$(appendto).after(html);
+	}
+
+
+
+
+
+	/**
+	* ------------------------------------------------------------------------
+	* Empty Trash
+	* ------------------------------------------------------------------------
+	**/
+	$('.np-empty-trash').on('click', function(e){
+		e.preventDefault();
+		$('#nested-loading').show();
+		$('#np-error').hide();
+		var posttype = $(this).attr('data-posttype');
+		if (window.confirm(nestedpages.trash_confirm)){ 
+			empty_trash(posttype);
+		}
+	});
+
+	/**
+	* Empty the trash for a given post type
+	*/
+	function empty_trash(posttype)
+	{
+		$.ajax({
+			url: ajaxurl,
+			type: 'post',
+			datatype: 'json',
+			data: {
+				action : 'npEmptyTrash',
+				nonce : nestedpages.np_nonce,
+				posttype : posttype
+			},
+			success: function(data){
+				console.log(data);
+				$('#nested-loading').hide();
+				if (data.status === 'error'){
+					$('#np-error').text(data.message).show();
+				} else {
+					$('.np-trash-links').hide();
+				}
+			}
+		});
+	}
+
+
+
+
+	/**
+	* ------------------------------------------------------------------------
+	* Search Filter (Non-Hierarchical)
+	* ------------------------------------------------------------------------
+	**/
+	$(document).on('keyup', '#nestedpages-search', function(){
+		var search = $(this).val().toLowerCase();
+		if ( search.length > 2 ){
+			search_filter_list(search);
+			return;
+		}
+		reset_search_filter();
+	});
+
+	/**
+	* Filter the list based on search input
+	*/
+	function search_filter_list(value)
+	{
+		var titles = $('.page-row .title');
+		$('.page-row').hide();
+		$.each(titles, function(i, v){
+			var text = $(this).text().toLowerCase();
+			if ( text.indexOf(value) > -1 ){
+				$(this).parents('.page-row').show();
+			}
+		});
+	}
+
+	/**
+	* Reset the list back to show all
+	*/
+	function reset_search_filter()
+	{
+		$('.page-row').show();
 	}
 
 

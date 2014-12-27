@@ -17,6 +17,7 @@ class UserRepository {
 	}
 
 
+	
 	/**
 	* Get all roles that arent admin, contributor or subscriber
 	* @return array
@@ -59,5 +60,35 @@ class UserRepository {
 		}
 		return false;
 	}
+
+
+	/**
+	* Get an array of all users/ids
+	* @since 1.3.0
+	* @return array
+	*/ 
+	public function allUsers()
+	{
+		$users = get_users(array(
+			'fields' => array('ID', 'display_name')
+		));
+		return $users;
+	}
+
+
+	/**
+	* Update User's Visible Pages
+	*/
+	public function updateVisiblePages($post_type, $ids)
+	{
+		$visible = unserialize(get_user_meta(get_current_user_id(), 'np_visible_posts', true));
+		$visible[$post_type] = $ids;
+		update_user_meta(
+			get_current_user_id(),
+			'np_visible_posts',
+			serialize($visible)
+		);
+	}
+
 
 }

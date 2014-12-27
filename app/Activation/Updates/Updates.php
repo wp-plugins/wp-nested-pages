@@ -24,6 +24,7 @@ class Updates {
 		$this->setCurrentVersion();
 		$this->addMenu();
 		$this->convertMenuToID();
+		$this->enablePagePostType();
 	}
 
 
@@ -67,6 +68,22 @@ class Updates {
 				$menu_id = wp_create_nav_menu('Nested Pages');
 				update_option('nestedpages_menu', $menu_id);
 			}
+		}
+	}
+
+
+	/**
+	* Make Page Post Type Enabled by Default
+	* @since 1.2.1
+	*/
+	private function enablePagePostType()
+	{
+		if ( version_compare( $this->current_version, '1.3.0', '<' ) ){
+			$enabled = get_option('nestedpages_posttypes');
+			$default = array('page' => array(
+				'replace_menu' => true
+			));
+			if ( !$enabled ) update_option('nestedpages_posttypes', $default);
 		}
 	}
 

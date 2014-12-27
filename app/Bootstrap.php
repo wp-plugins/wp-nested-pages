@@ -31,20 +31,9 @@ class Bootstrap {
 	*/
 	public function initializeWordPress()
 	{
-		$this->listPages();
+		new Entities\AdminMenu\AdminMenu;
+		new Entities\DefaultList\DefaultListFactory;
 		$this->addLocalization();
-	}
-
-
-	/**
-	* Page Listing & Menus
-	* @since 1.1.6 - Moved into init due to Multisite bug
-	*/
-	public function listPages()
-	{
-		new Controllers\AdminMenuController;
-		new Controllers\AdminSubmenuController;
-		new Controllers\PageListingController;
 	}
 
 

@@ -1,7 +1,9 @@
 <?php namespace NestedPages\Form\Handlers;
 
-use NestedPages\Entities\NavMenu;
+use NestedPages\Entities\NavMenu\NavMenu;
 use NestedPages\Entities\Post\PostRepository;
+use NestedPages\Entities\Post\PostUpdateRepository;
+use NestedPages\Entities\User\UserRepository;
 
 /**
 * Base Form Handler Class
@@ -27,6 +29,17 @@ abstract class BaseHandler {
 	protected $post_repo;
 
 	/**
+	* User Repo
+	* @var object
+	*/
+	protected $user;
+
+	/**
+	* Post Update Repo
+	*/
+	protected $post_update_repo;
+
+	/**
 	* Response
 	* @var array;
 	*/
@@ -36,6 +49,8 @@ abstract class BaseHandler {
 	public function __construct()
 	{
 		$this->post_repo = new PostRepository;
+		$this->post_update_repo = new PostUpdateRepository;
+		$this->user = new UserRepository;
 		$this->setData();
 		$this->validateNonce();
 	}
@@ -73,13 +88,15 @@ abstract class BaseHandler {
 	*/
 	protected function syncMenu()
 	{
-		if ( $_POST['syncmenu'] == 'sync' ){
-			$menu = new NavMenu;
-			$menu->clearMenu();
-			$menu->sync();
-			update_option('nestedpages_menusync', 'sync');
-		} else {
-			update_option('nestedpages_menusync', 'nosync');
+		if ( $_POST['post_type'] == 'page' ) {
+			if ( $_POST['syncmenu'] == 'sync' ){
+				$menu = new NavMenu;
+				$menu->clearMenu();
+				$menu->sync();
+				update_option('nestedpages_menusync', 'sync');
+			} else {
+				update_option('nestedpages_menusync', 'nosync');
+			}
 		}
 	}
 
