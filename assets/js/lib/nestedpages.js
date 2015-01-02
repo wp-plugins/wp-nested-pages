@@ -682,7 +682,6 @@ jQuery(function($){
 			datatype: 'json',
 			data: $(form).serialize() + '&action=npquickEdit&nonce=' + nestedpages.np_nonce + '&syncmenu=' + syncmenu + '&post_type=' + np_get_post_type(),
 			success: function(data){
-				console.log(data);
 				if (data.status === 'error'){
 					np_remove_qe_loading(form);
 					$(form).find('.np-quickedit-error').text(data.message).show();
@@ -1526,7 +1525,7 @@ jQuery(function($){
 		html += '</div><!-- .row-inner --></div><!-- .row -->';
 		html += '</li>';
 
-		$(appendto).after(html);
+		$(appendto).append(html);
 	}
 
 
@@ -1563,7 +1562,6 @@ jQuery(function($){
 				posttype : posttype
 			},
 			success: function(data){
-				console.log(data);
 				$('#nested-loading').hide();
 				if (data.status === 'error'){
 					$('#np-error').text(data.message).show();
