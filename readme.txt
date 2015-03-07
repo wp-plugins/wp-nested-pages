@@ -38,6 +38,7 @@ For more information visit [nestedpages.com](http://nestedpages.com).
 * Italian (Francesco Canovi)
 * Portuguese (Luis Martins)
 * Russian (Алексей Катаев)
+* Turkish (Yuksel Beyti)
 
 == Installation ==
 
@@ -87,6 +88,12 @@ If you have WordPress SEO by Yoast installed, your page score indicators are sho
 7. The Nested Pages interface can be enabled on a per-post-type basis, with customizable options for each type.
 
 == Changelog ==
+
+= 1.3.11 =
+* Minor UI bug fixes
+* Javascript Modal error bug fix
+* Turkish Translation (Provided by Yuksel Beyti)
+* Updated French Translation (Provided by @Inovagora)
 
 = 1.3.10 =
 * Bug fix - resolves deprecated function issue with SEO by Yoast update v1.7.3. Critical for sites running both Nested Pages and WordPress SEO by Yoast
