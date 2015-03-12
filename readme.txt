@@ -89,6 +89,9 @@ If you have WordPress SEO by Yoast installed, your page score indicators are sho
 
 == Changelog ==
 
+= 1.3.12 =
+* Permissions Bug fix in emptying trash (Thanks to Yuksel Beyti)
+
 = 1.3.11 =
 * Minor UI bug fixes
 * Javascript Modal error bug fix
@@ -200,6 +203,9 @@ If you have WordPress SEO by Yoast installed, your page score indicators are sho
 * Nested Pages
 
 == Upgrade Notice ==
+
+= 1.3.12 =
+Resolves issue with custom user roles/permissions and deleting posts. Important patch for sites using custom user roles. Thanks to Yuksel Beyti for finding/patching.
 
 = 1.3.10 =
 Resolves deprecated function issue with SEO by Yoast update v1.7.3. Critical for sites running both Nested Pages and WordPress SEO by Yoast
