@@ -89,6 +89,13 @@ If you have WordPress SEO by Yoast installed, your page score indicators are sho
 
 == Changelog ==
 
+= 1.4.0 =
+* Clone/Duplicate functionality added - click the "clone" button in a row to clone/duplicate a post or page
+* Bug fix when attempting to trash Advanced Custom Field field groups (Thanks to Ben Plum)
+* Javascript rewritten for more future-friendly updates and feature builds
+* Draft filter added to list
+* Tested and confirmed WordPress 4.3 compatibility
+
 = 1.3.15 =
 * Minor Bug fixes and optimizations
 * Bug fix in expand all button
