@@ -4,7 +4,7 @@ Donate link: http://nestedpages.com/
 Tags: pages, admin, nested, tree view, page tree, sort, quick edit, structure
 Requires at least: 3.8
 Tested up to: 4.3
-Stable tag: 1.4.1
+Stable tag: 1.5.2
 
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -88,6 +88,19 @@ If you have WordPress SEO by Yoast installed, your page score indicators are sho
 7. The Nested Pages interface can be enabled on a per-post-type basis, with customizable options for each type.
 
 == Changelog ==
+
+= 1.5.3 =
+* Confirmation modal added when deleting a link item.
+* Bug fix where custom nav titles were not being saved.
+* Bug fix where replacing the default menus was breaking custom admin submenu links.
+* Minor interface enhancements.
+
+= 1.5.2 =
+* Fixed bug when upgrading in an install with sync disabled.
+
+= 1.5.1 =
+* Bug fix where hidden nav items in the nested view were deleting nav items from other menus.
+* Updated German Translation (Thanks to Martin Wecke)
 
 = 1.5.0 =
 * Links now include all taxonomies/post types, enabling full control over the primary site menu from the Nested Pages interface. Start adding menu items by selecting "Add Link" from the top, or the link button on a specific row to add a child item.

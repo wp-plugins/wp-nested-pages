@@ -42,7 +42,7 @@ class NavMenuSyncListing extends NavMenuSync
 	{
 		$this->count = $this->count + 1;
 		$page_q = new \WP_Query(array(
-			'post_type' => array('page','np-redirect'),
+			'post_type' => array('page', 'np-redirect'),
 			'posts_per_page' => -1,
 			'post_status' => 'publish',
 			'orderby' => 'menu_order',
@@ -52,7 +52,7 @@ class NavMenuSyncListing extends NavMenuSync
 		if ( $page_q->have_posts() ) : while ( $page_q->have_posts() ) : $page_q->the_post();
 			global $post;
 			$this->post = $this->post_factory->build($post);
-			$this->syncPost($menu_parent);			
+			$this->syncPost($menu_parent);
 		endwhile; endif; wp_reset_postdata();
 	}
 
@@ -65,7 +65,6 @@ class NavMenuSyncListing extends NavMenuSync
 		// Get the Menu Item
 		$query_type = ( $this->post->type == 'np-redirect' ) ? 'xfn' : 'object_id';
 		$menu_item_id = $this->nav_menu_repo->getMenuItem($this->post->id, $query_type);
-		
 		if ( $this->post->nav_status == 'hide' ) return $this->removeItem($menu_item_id);
 		$menu = $this->syncMenuItem($menu_parent, $menu_item_id);
 		$this->sync( $this->post->id, $menu );
@@ -79,9 +78,10 @@ class NavMenuSyncListing extends NavMenuSync
 	{
 		$type = ( $this->post->nav_type ) ? $this->post->nav_type : 'custom';
 		$object = ( $this->post->nav_object ) ? $this->post->nav_object : 'custom';
-		$object_id = ( $this->post->nav_object_id  ) ? $this->post->nav_object_id : null;
-		$url = ( $type == 'custom' ) ? esc_url($this->post->content) : null;
+		$object_id = ( $this->post->nav_object_id  ) ? intval($this->post->nav_object_id) : null;
+		$url = ( $type == 'custom' ) ? esc_url($this->post->content) : '';
 		$xfn = $this->post->id;
+		$title = ( $this->post->nav_title ) ? $this->post->nav_title : $this->post->title;
 		
 		// Compatibility for 1.4.1 - Reset Page links
 		if ( $this->post->type == 'page' ){
@@ -92,7 +92,7 @@ class NavMenuSyncListing extends NavMenuSync
 		}
 
 		$args = array(
-			'menu-item-title' => $this->post->title,
+			'menu-item-title' => $title,
 			'menu-item-position' => $this->count,
 			'menu-item-url' => $url,
 			'menu-item-attr-title' => $this->post->nav_title_attr,

@@ -37,7 +37,7 @@
 		</div>
 		<?php endif; ?>
 
-		<img src="<?php echo plugins_url(); ?>/wp-nested-pages/assets/images/spinner-2x.gif" alt="loading" id="nested-loading" />
+		<img src="<?php echo NestedPages\Helpers::plugin_url(); ?>/assets/images/spinner-2x.gif" alt="loading" id="nested-loading" />
 	</div><!-- .nestedpages-top-toggles -->
 
 	<?php include(NestedPages\Helpers::view('partials/tool-list')); ?>
@@ -65,7 +65,9 @@
 
 </div><!-- .wrap -->
 
-<?php include( NestedPages\Helpers::view('forms/empty-trash-modal') ); ?>
-<?php include( NestedPages\Helpers::view('forms/clone-form') ); ?>
-<?php include( NestedPages\Helpers::view('forms/link-form') ); ?>
-<?php include( NestedPages\Helpers::view('forms/bulk-add') ); ?>
+<?php 
+include( NestedPages\Helpers::view('forms/empty-trash-modal') );
+include( NestedPages\Helpers::view('forms/clone-form') );
+include( NestedPages\Helpers::view('forms/link-form') );
+include( NestedPages\Helpers::view('forms/bulk-add') );
+include( NestedPages\Helpers::view('forms/delete-confirmation-modal') ); 
